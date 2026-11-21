@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReviewPulse — Smart Google Review &amp; QR Funnel SaaS for Indian Businesses</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .star-btn {
+      transition: transform 0.15s ease, color 0.15s ease;
+    }
+    .star-btn:active {
+      transform: scale(0.92);
+    }
+    .tab-fade {
+      animation: fadeIn 0.18s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printable-poster, #printable-poster * {
+        visibility: visible !important;
+      }
+      #printable-poster {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 420px !important;
+        box-shadow: none !important;
+        border: 2px solid #e2e8f0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-4 right-4 z-50 hidden max-w-sm rounded-xl bg-slate-900 text-white px-4 py-3 text-sm font-medium shadow-xl flex items-center gap-2.5 transition-all">
+    <span id="toast-icon" class="text-emerald-400">✓</span>
+    <span id="toast-msg">Saved</span>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+      <button type="button" id="brand-home-btn" class="flex items-center gap-2 text-left focus:outline-none">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+          </svg>
+        </div>
+        <div>
+          <span class="font-bold text-slate-900 tracking-tight text-base">ReviewPulse</span>
+          <span class="hidden sm:inline-block ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">INDIA</span>
+        </div>
+      </button>
+
+      <!-- Desktop Tabs (hidden on auth/public pages) -->
+      <nav id="desktop-nav" class="hidden md:flex items-center gap-1">
+        <button type="button" data-tab="setup" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium transition">Business Setup</button>
+        <button type="button" data-tab="ai-reply" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium transition">AI Reply</button>
+        <button type="button" data-tab="qr-funnel" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium transition">Smart QR Funnel</button>
+        <button type="button" data-tab="billing" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium transition">Billing &amp; Plans</button>
+      </nav>
+
+      <!-- User Status & Actions -->
+      <div class="flex items-center gap-2">
+        <span id="header-plan-badge" class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Free Plan</span>
+        <button type="button" id="open-supabase-modal-btn" class="text-xs font-medium text-slate-600 hover:text-indigo-600 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-200 transition">
+          Supabase
+        </button>
+        <button type="button" id="logout-btn" class="hidden text-xs font-medium text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 w-full max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-10">
+
+    <!-- ==================== AUTH / LANDING VIEW ==================== -->
+    <section id="auth-view" class="max-w-md mx-auto mt-2 sm:mt-6 tab-fade">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold mb-3">
+          <span>🇮🇳</span> Built for Indian Local Businesses
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Turn Every Walk-In Into a 5-Star Google Review</h1>
+        <p class="text-sm text-slate-600 mt-2">AI replies in English, Tamil &amp; Tanglish + Smart QR standees that route happy customers to Google Maps and catch issues privately.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+        <div class="flex rounded-xl bg-slate-100 p-1 mb-5">
+          <button type="button" id="auth-mode-signin" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition">Sign In</button>
+          <button type="button" id="auth-mode-signup" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-600 transition">Create Account</button>
+        </div>
+
+        <!-- Google OAuth Button -->
+        <button type="button" id="google-auth-btn" class="w-full min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm transition shadow-sm">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span>Continue with Google (Supabase Auth)</span>
+        </button>
+
+        <div class="relative my-5">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+          <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400 font-medium">or with email</span></div>
+        </div>
+
+        <form id="auth-form" class="space-y-3.5">
+          <div>
+            <label for="auth-email" class="block text-xs font-semibold text-slate-700 mb-1">Work Email</label>
+            <input id="auth-email" type="email" required placeholder="owner@kovaicafe.in" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+          <div>
+            <label for="auth-password" class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+            <input id="auth-password" type="password" required minlength="6" placeholder="••••••••" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+          <button type="submit" id="auth-submit-btn" class="w-full min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+            Sign In with Email
+          </button>
+        </form>
+
+        <div class="mt-4 pt-4 border-t border-slate-100">
+          <button type="button" id="demo-login-btn" class="w-full min-h-[42px] rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs transition flex items-center justify-center gap-1.5">
+            <span>⚡</span> Instant Demo Login (RS Puram Cafe, Coimbatore)
+          </button>
+        </div>
+      </div>
+
+      <!-- Supported Verticals Strip -->
+      <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-700">☕ Cafes &amp; Restaurants</div>
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-700">🏥 Clinics &amp; Pharmacies</div>
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-700">⛽ Petrol Bunks</div>
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-700">💻 Coworking Spaces</div>
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-medium text-slate-700 col-span-2 sm:col-span-2">🏢 Retail &amp; Commercial Buildings</div>
+      </div>
+    </section>
+
+    <!-- ==================== DASHBOARD VIEW (4 TABS) ==================== -->
+    <section id="dashboard-view" class="hidden space-y-6">
+
+      <!-- Active Business Summary Banner -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+          <div id="banner-category-icon" class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">☕</div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 id="banner-biz-name" class="font-bold text-slate-900 text-base">Kovai Filter Coffee &amp; Kitchen</h2>
+              <span id="banner-biz-cat" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Cafes/Restaurants</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              <span id="banner-biz-city">RS Puram, Coimbatore</span> • Tone: <span id="banner-biz-tone" class="font-medium text-slate-700">Warm</span> • Lang: <span id="banner-biz-lang" class="font-medium text-slate-700">Tanglish</span>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <div class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
+            <span class="text-slate-500">AI Replies:</span>
+            <span id="banner-usage-text" class="font-bold text-slate-900">2 / 10</span>
+          </div>
+          <button type="button" id="quick-funnel-preview-btn" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+            Test QR Page
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: BUSINESS SETUP -->
+      <div id="tab-setup" class="tab-panel tab-fade space-y-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+          <div class="mb-5">
+            <h3 class="text-lg font-bold text-slate-900">Business Setup</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Configure your business profile for local SEO review replies and your Smart QR funnel.</p>
+          </div>
+
+          <form id="business-setup-form" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="setup-name" class="block text-xs font-semibold text-slate-700 mb-1">Business Name</label>
+                <input id="setup-name" type="text" required placeholder="e.g., Kovai Filter Coffee &amp; Kitchen" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div>
+                <label for="setup-category" class="block text-xs font-semibold text-slate-700 mb-1">Business Category</label>
+                <select id="setup-category" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="Cafes/Restaurants">Cafes/Restaurants</option>
+                  <option value="Medical Clinics/Pharmacies">Medical Clinics/Pharmacies</option>
+                  <option value="Petrol Bunks">Petrol Bunks</option>
+                  <option value="Coworking Spaces">Coworking Spaces</option>
+                  <option value="Retail/Commercial Buildings">Retail/Commercial Buildings</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="setup-city" class="block text-xs font-semibold text-slate-700 mb-1">City / Area (for Local SEO Keywords)</label>
+                <input id="setup-city" type="text" required placeholder="e.g., RS Puram, Coimbatore" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div>
+                <label for="setup-gmaps" class="block text-xs font-semibold text-slate-700 mb-1">Google Maps Review Link</label>
+                <input id="setup-gmaps" type="url" required placeholder="https://g.page/r/your-business/review" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div>
+                <label for="setup-tone" class="block text-xs font-semibold text-slate-700 mb-1">Reply Tone</label>
+                <select id="setup-tone" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="Warm">Warm</option>
+                  <option value="Professional">Professional</option>
+                  <option value="Short & Crisp">Short &amp; Crisp</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="setup-language" class="block text-xs font-semibold text-slate-700 mb-1">Default Local Reply Language</label>
+                <select id="setup-language" class="w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="English">English</option>
+                  <option value="Tamil">Tamil (தமிழ்)</option>
+                  <option value="Tanglish">Tanglish (Tamil + English)</option>
+                  <option value="Hindi">Hindi (हिन्दी)</option>
+                  <option value="Malayalam">Malayalam (മലയാളம்)</option>
+                  <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Telugu">Telugu (తెలుగు)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Auto-Post & Local Language Auto-Detect Settings -->
+            <div class="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">⚡</span>
+                  <span class="text-xs font-bold text-slate-900">Google Business Profile Auto-Post</span>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-semibold self-start">● GBP Sync Ready</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="flex items-start gap-2.5 bg-white rounded-xl border border-slate-200 p-3 cursor-pointer">
+                  <input id="setup-autopost" type="checkbox" class="mt-0.5 w-4 h-4 accent-indigo-600 rounded" />
+                  <div class="text-xs">
+                    <div class="font-semibold text-slate-900">Auto-Post Replies</div>
+                    <div class="text-slate-500">Automatically publish replies to new Google reviews</div>
+                  </div>
+                </label>
+                <label class="flex items-start gap-2.5 bg-white rounded-xl border border-slate-200 p-3 cursor-pointer">
+                  <input id="setup-autodetect" type="checkbox" class="mt-0.5 w-4 h-4 accent-indigo-600 rounded" />
+                  <div class="text-xs">
+                    <div class="font-semibold text-slate-900">Auto-Detect Local Language</div>
+                    <div class="text-slate-500">Match Tamil, Hindi, Tanglish, or default local language</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Medical Privacy Notice Preview -->
+            <div id="setup-medical-note" class="hidden rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
+              <span class="text-base">🛡️</span>
+              <div>
+                <span class="font-bold">Medical Privacy Mode Enabled:</span> Because your category is Medical Clinics/Pharmacies, ReviewPulse will strictly avoid mentioning or confirming any patient conditions, symptoms, or treatments in AI-generated replies.
+              </div>
+            </div>
+
+            <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p class="text-xs text-slate-500">Changes sync immediately to AI Reply Generator &amp; Smart QR Poster.</p>
+              <button type="submit" class="min-h-[44px] px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition">
+                Save Business Profile
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 2: AI REPLY GENERATOR -->
+      <div id="tab-ai-reply" class="tab-panel hidden tab-fade space-y-5">
+
+        <!-- Auto-Post Local Language Standout Banner -->
+        <div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-sm space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-bold uppercase tracking-wider">Auto-Pilot</span>
+                <span id="autopilot-status-badge" class="text-xs font-semibold text-emerald-200">● Auto-Post Active</span>
+              </div>
+              <h3 class="text-base sm:text-lg font-bold mt-1">Auto-Reply in Customer's Local Language</h3>
+              <p class="text-xs text-indigo-100 mt-0.5">Detects Tamil, Tanglish, Hindi, Malayalam, Kannada, Telugu, or English and posts directly to Google Maps.</p>
+            </div>
+            <button type="button" id="simulate-autopost-btn" class="shrink-0 min-h-[42px] px-4 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
+              <span>⚡</span> Simulate Incoming Review &amp; Auto-Post
+            </button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">AI Reply Generator</h3>
+              <p class="text-xs sm:text-sm text-slate-500">Paste a customer's Google review to generate 3 natural, SEO-friendly replies.</p>
+            </div>
+            <div id="ai-usage-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold self-start">
+              2 / 10 replies used
+            </div>
+          </div>
+
+          <!-- Medical Strict Privacy Banner -->
+          <div id="ai-medical-guard" class="hidden rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-900 flex items-center gap-2">
+            <span>🔒</span>
+            <span><strong>Clinic Privacy Guard Active:</strong> Replies will never disclose or echo patient medical conditions, diagnoses, or prescriptions.</span>
+          </div>
+
+          <!-- Sample Review Chips -->
+          <div>
+            <span class="block text-xs font-semibold text-slate-500 mb-1.5">Try a sample review:</span>
+            <div id="sample-review-chips" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div>
+            <label for="review-input" class="block text-xs font-semibold text-slate-700 mb-1">Customer Review Text</label>
+            <textarea id="review-input" rows="4" placeholder="Paste the customer's Google review here..." class="w-full rounded-xl border border-slate-300 p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          </div>
+
+          <!-- Star Rating Selector -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <div>
+              <span class="block text-xs font-semibold text-slate-700 mb-1.5">Customer Star Rating</span>
+              <div id="ai-star-selector" class="flex items-center gap-1.5">
+                <button type="button" data-star="1" class="star-btn w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-xl">★</button>
+                <button type="button" data-star="2" class="star-btn w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-xl">★</button>
+                <button type="button" data-star="3" class="star-btn w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-xl">★</button>
+                <button type="button" data-star="4" class="star-btn w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-xl">★</button>
+                <button type="button" data-star="5" class="star-btn w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-xl">★</button>
+                <span id="ai-star-label" class="ml-2 text-xs font-semibold text-slate-600">5 Stars</span>
+              </div>
+            </div>
+
+            <button type="button" id="generate-replies-btn" class="min-h-[46px] px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center gap-2">
+              <span>✨</span> Generate 3 Replies
+            </button>
+          </div>
+        </div>
+
+        <!-- Generated Replies Container -->
+        <div id="replies-output" class="space-y-3 hidden">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-800">3 Tailored Replies (Copy or Post to Google)</h4>
+            <span id="replies-meta-tag" class="text-xs text-slate-500"></span>
+          </div>
+          <div id="replies-list" class="grid grid-cols-1 gap-3"></div>
+        </div>
+
+        <!-- Auto-Posted Replies Activity Log -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-slate-900">Auto-Posted Replies Log</h4>
+              <p class="text-xs text-slate-500">Recent Google reviews automatically answered in the local language.</p>
+            </div>
+            <span id="autopost-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">1 Posted</span>
+          </div>
+          <div id="autopost-log-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SMART QR REVIEW FUNNEL -->
+      <div id="tab-qr-funnel" class="tab-panel hidden tab-fade space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+          <!-- Left: Printable Counter Poster -->
+          <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Counter QR Poster</h3>
+                <p class="text-xs text-slate-500">Print or download for your billing counter / reception desk.</p>
+              </div>
+            </div>
+
+            <!-- Printable Poster Card -->
+            <div id="printable-poster" class="mx-auto max-w-sm rounded-2xl border-2 border-indigo-600 bg-gradient-to-b from-indigo-600 to-indigo-800 p-1 shadow-md">
+              <div class="bg-white rounded-xl p-6 text-center space-y-4">
+                <div class="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold uppercase tracking-wider" id="poster-category">Cafes/Restaurants</div>
+                <h4 id="poster-biz-name" class="text-xl font-extrabold text-slate-900 leading-tight">Kovai Filter Coffee &amp; Kitchen</h4>
+                <p class="text-sm font-medium text-slate-600">Loved your visit? Rate your experience in 10 seconds!</p>
+
+                <div class="flex justify-center gap-1 text-amber-400 text-2xl">
+                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                </div>
+
+                <!-- QR Code Render Target -->
+                <div class="flex justify-center py-2">
+                  <div id="qr-code-box" class="p-3 bg-white border-2 border-slate-200 rounded-2xl inline-block shadow-inner"></div>
+                </div>
+
+                <p class="text-xs font-semibold text-slate-700">Scan with Google Lens or Phone Camera</p>
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                  <span>Powered by</span>
+                  <span class="font-bold text-indigo-600">ReviewPulse</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Poster Actions -->
+            <div class="grid grid-cols-2 gap-3 pt-1">
+              <button type="button" id="download-poster-btn" class="min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+                <span>⬇</span> Download PNG
+              </button>
+              <button type="button" id="print-poster-btn" class="min-h-[44px] rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+                <span>🖨️</span> Print Standee
+              </button>
+            </div>
+            <button type="button" id="launch-funnel-btn" class="w-full min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition flex items-center justify-center gap-2">
+              <span>📱</span> Simulate Scanning QR Code (Customer View)
+            </button>
+          </div>
+
+          <!-- Right: Private Feedback Inbox (1-3 Star Submissions) -->
+          <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Private Feedback Inbox</h3>
+                <p class="text-xs text-slate-500">1–3 star ratings are routed here privately instead of Google Maps.</p>
+              </div>
+              <span id="feedback-count-badge" class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold">0 Pending</span>
+            </div>
+
+            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 space-y-1">
+              <div class="font-semibold text-slate-800">How the Smart Funnel Works:</div>
+              <div>• <strong>4–5 Stars:</strong> Redirects immediately to your Google Maps Review Link.</div>
+              <div>• <strong>1–3 Stars:</strong> Opens a private form (Name, Phone, Issue) saved to Supabase.</div>
+            </div>
+
+            <div id="private-feedback-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: BILLING & PLANS -->
+      <div id="tab-billing" class="tab-panel hidden tab-fade space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">Billing &amp; Plans</h3>
+              <p class="text-xs sm:text-sm text-slate-500">Simple INR pricing for Indian SMBs. Upgrade or cancel anytime.</p>
+            </div>
+            <!-- Billing Cycle Toggle -->
+            <div class="inline-flex items-center rounded-xl bg-slate-100 p-1 self-start">
+              <button type="button" id="cycle-monthly-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm transition">Monthly</button>
+              <button type="button" id="cycle-yearly-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 transition">Yearly <span class="text-emerald-600 font-bold">Save 17%</span></button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Free Plan -->
+            <div id="plan-card-free" class="rounded-2xl border border-slate-200 p-5 flex flex-col justify-between bg-slate-50/50">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-base font-bold text-slate-900">Free Plan</span>
+                  <span id="free-current-tag" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">Current Plan</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-1">
+                  <span class="text-3xl font-extrabold text-slate-900">₹0</span>
+                  <span class="text-xs text-slate-500">/ month</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Great for trying out AI replies &amp; QR routing.</p>
+                <ul class="mt-5 space-y-2.5 text-sm text-slate-700">
+                  <li class="flex items-center gap-2"><span class="text-emerald-600">✓</span> 10 AI review replies / month</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600">✓</span> Basic Smart QR review page</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600">✓</span> English, Tamil &amp; Tanglish support</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600">✓</span> Private 1–3 star feedback capture</li>
+                </ul>
+              </div>
+              <button type="button" id="downgrade-free-btn" disabled class="mt-6 w-full min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-500 font-semibold text-sm cursor-default">
+                Active Free Tier
+              </button>
+            </div>
+
+            <!-- Pro Plan -->
+            <div id="plan-card-pro" class="rounded-2xl border-2 border-indigo-600 p-5 flex flex-col justify-between bg-white shadow-sm relative">
+              <div class="absolute -top-3 right-5 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[11px] font-bold">MOST POPULAR</div>
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-base font-bold text-slate-900">Pro Plan</span>
+                  <span id="pro-current-tag" class="hidden text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Active Pro</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-1">
+                  <span id="pro-price-display" class="text-3xl font-extrabold text-slate-900">₹499</span>
+                  <span id="pro-period-display" class="text-xs text-slate-500">/ month</span>
+                </div>
+                <p id="pro-subtext" class="text-xs text-slate-500 mt-1">Or ₹4,999/year (2 months free)</p>
+                <ul class="mt-5 space-y-2.5 text-sm text-slate-700">
+                  <li class="flex items-center gap-2"><span class="text-indigo-600 font-bold">✓</span> <strong>Unlimited</strong> AI review replies</li>
+                  <li class="flex items-center gap-2"><span class="text-indigo-600 font-bold">✓</span> Local SEO keyword optimization</li>
+                  <li class="flex items-center gap-2"><span class="text-indigo-600 font-bold">✓</span> High-res printable QR standee PNG</li>
+                  <li class="flex items-center gap-2"><span class="text-indigo-600 font-bold">✓</span> Medical Clinic privacy guard &amp; priority support</li>
+                </ul>
+              </div>
+              <button type="button" id="razorpay-pay-btn" class="mt-6 w-full min-h-[46px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center gap-2">
+                <span>💳</span> Pay with Razorpay (<span id="pay-btn-amount">₹499</span>)
+              </button>
+            </div>
+          </div>
+
+          <!-- Latest Invoice Banner (shown after upgrade) -->
+          <div id="pro-receipt-card" class="hidden mt-5 rounded-xl bg-emerald-50 border border-emerald-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="text-xs text-emerald-900">
+              <div class="font-bold text-sm">Pro Subscription Active</div>
+              <div id="pro-receipt-meta" class="mt-0.5">Payment ID: pay_demo_123 • Plan: ₹499/month</div>
+            </div>
+            <span class="text-xs font-semibold px-3 py-1 rounded-lg bg-white text-emerald-700 border border-emerald-200 self-start">Razorpay Verified</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== PUBLIC LEGAL / PRICING PAGES ==================== -->
+    <section id="public-page-view" class="hidden max-w-3xl mx-auto tab-fade">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5">
+        <button type="button" id="back-from-public-btn" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+          ← Back to ReviewPulse
+        </button>
+        <div id="public-page-content" class="space-y-4 text-sm text-slate-700 leading-relaxed"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar (Dashboard only) -->
+  <nav id="mobile-bottom-nav" class="hidden md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 px-2 py-1.5 flex justify-around">
+    <button type="button" data-tab="setup" class="mobile-tab flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-medium">
+      <span class="text-base">🏪</span><span>Setup</span>
+    </button>
+    <button type="button" data-tab="ai-reply" class="mobile-tab flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-medium">
+      <span class="text-base">✨</span><span>AI Reply</span>
+    </button>
+    <button type="button" data-tab="qr-funnel" class="mobile-tab flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-medium">
+      <span class="text-base">📱</span><span>QR Funnel</span>
+    </button>
+    <button type="button" data-tab="billing" class="mobile-tab flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-medium">
+      <span class="text-base">💳</span><span>Billing</span>
+    </button>
+  </nav>
+
+  <!-- Public Footer (Razorpay Verification Pages) -->
+  <footer class="bg-white border-t border-slate-200 py-6 px-4 mb-14 md:mb-0">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div>
+        <span class="font-bold text-slate-800">ReviewPulse</span> • Coimbatore, Tamil Nadu, India • support@reviewpulse.in
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-4 font-medium">
+        <button type="button" data-public="pricing" class="hover:text-indigo-600 transition">Pricing</button>
+        <button type="button" data-public="privacy" class="hover:text-indigo-600 transition">Privacy Policy</button>
+        <button type="button" data-public="terms" class="hover:text-indigo-600 transition">Terms &amp; Conditions</button>
+        <button type="button" data-public="refund" class="hover:text-indigo-600 transition">Refund Policy</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== CUSTOMER QR FUNNEL MODAL ==================== -->
+  <div id="funnel-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative tab-fade max-h-[90vh] overflow-y-auto">
+      <button type="button" id="close-funnel-modal" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-sm font-bold">✕</button>
+
+      <!-- Step 1: Star Rating -->
+      <div id="funnel-step-rate" class="text-center space-y-4 pt-2">
+        <div id="funnel-biz-badge" class="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Cafes/Restaurants</div>
+        <h3 class="text-xl font-extrabold text-slate-900">Rate your experience at <span id="funnel-biz-name" class="text-indigo-600">Kovai Filter Coffee</span></h3>
+        <p class="text-xs text-slate-500">Tap a star below to share your feedback</p>
+
+        <div id="funnel-stars" class="flex justify-center gap-2 py-3">
+          <button type="button" data-fstar="1" class="funnel-star w-12 h-12 rounded-2xl border border-slate-200 hover:border-amber-400 text-3xl text-slate-300 hover:text-amber-400 transition">★</button>
+          <button type="button" data-fstar="2" class="funnel-star w-12 h-12 rounded-2xl border border-slate-200 hover:border-amber-400 text-3xl text-slate-300 hover:text-amber-400 transition">★</button>
+          <button type="button" data-fstar="3" class="funnel-star w-12 h-12 rounded-2xl border border-slate-200 hover:border-amber-400 text-3xl text-slate-300 hover:text-amber-400 transition">★</button>
+          <button type="button" data-fstar="4" class="funnel-star w-12 h-12 rounded-2xl border border-slate-200 hover:border-amber-400 text-3xl text-slate-300 hover:text-amber-400 transition">★</button>
+          <button type="button" data-fstar="5" class="funnel-star w-12 h-12 rounded-2xl border border-slate-200 hover:border-amber-400 text-3xl text-slate-300 hover:text-amber-400 transition">★</button>
+        </div>
+        <p class="text-[11px] text-slate-400">Your feedback helps us serve you better.</p>
+      </div>
+
+      <!-- Step 2A: 4-5 Star Redirect Screen -->
+      <div id="funnel-step-google" class="hidden text-center space-y-4 pt-3">
+        <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl">🎉</div>
+        <h3 class="text-lg font-extrabold text-slate-900">Thank you for the <span id="funnel-selected-stars">5</span>-star rating!</h3>
+        <p class="text-xs text-slate-600">Redirecting you to Google Maps so you can post your review...</p>
+        <a id="funnel-gmaps-link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="block w-full min-h-[44px] leading-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
+          Open Google Maps Review Page ↗
+        </a>
+        <button type="button" id="funnel-reset-btn-a" class="text-xs text-slate-500 underline">Test another rating</button>
+      </div>
+
+      <!-- Step 2B: 1-3 Star Private Feedback Form -->
+      <div id="funnel-step-private" class="hidden space-y-4 pt-2">
+        <div class="text-center">
+          <h3 class="text-lg font-bold text-slate-900">We're sorry it wasn't 5 stars</h3>
+          <p class="text-xs text-slate-500 mt-1">Share what went wrong privately so our manager can fix it right away.</p>
+        </div>
+        <form id="private-feedback-form" class="space-y-3">
+          <div>
+            <label for="fb-name" class="block text-xs font-semibold text-slate-700 mb-1">Your Name</label>
+            <input id="fb-name" type="text" required placeholder="Karthik S." class="w-full min-h-[42px] rounded-xl border border-slate-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label for="fb-phone" class="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+            <input id="fb-phone" type="tel" required placeholder="+91 98765 43210" class="w-full min-h-[42px] rounded-xl border border-slate-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label for="fb-issue" class="block text-xs font-semibold text-slate-700 mb-1">What happened?</label>
+            <textarea id="fb-issue" rows="3" required placeholder="Describe the issue..." class="w-full rounded-xl border border-slate-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          </div>
+          <button type="submit" class="w-full min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition">
+            Submit Private Feedback
+          </button>
+        </form>
+      </div>
+
+      <!-- Step 3: Private Feedback Saved Confirmation -->
+      <div id="funnel-step-thanks" class="hidden text-center space-y-4 py-4">
+        <div class="w-14 h-14 mx-auto rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl">✓</div>
+        <h3 class="text-lg font-bold text-slate-900">Feedback Sent Privately</h3>
+        <p class="text-xs text-slate-600">Saved to the business owner's Private Feedback Inbox. Thank you for helping us improve.</p>
+        <button type="button" id="funnel-reset-btn-b" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== RAZORPAY CHECKOUT MODAL ==================== -->
+  <div id="razorpay-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl tab-fade">
+      <div class="bg-[#1b2b4e] text-white p-4 flex items-center justify-between">
+        <div>
+          <div class="text-xs text-blue-200 font-medium">ReviewPulse Pro</div>
+          <div id="rzp-modal-amount" class="text-xl font-extrabold">₹499</div>
+        </div>
+        <button type="button" id="close-rzp-modal" class="text-blue-200 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Select Payment Method (Razorpay)</div>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-indigo-600 bg-indigo-50/40 cursor-pointer">
+            <input type="radio" name="rzp-method" value="UPI (GPay / PhonePe)" checked class="accent-indigo-600" />
+            <div class="text-sm font-semibold text-slate-900">UPI (GPay, PhonePe, Paytm)</div>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer">
+            <input type="radio" name="rzp-method" value="Card (Visa / Mastercard / RuPay)" class="accent-indigo-600" />
+            <div class="text-sm font-semibold text-slate-900">Debit / Credit Card</div>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer">
+            <input type="radio" name="rzp-method" value="Netbanking" class="accent-indigo-600" />
+            <div class="text-sm font-semibold text-slate-900">Netbanking</div>
+          </label>
+        </div>
+        <button type="button" id="confirm-rzp-pay-btn" class="w-full min-h-[44px] rounded-xl bg-[#2b6cb0] hover:bg-[#235891] text-white font-semibold text-sm transition">
+          Pay Now
+        </button>
+        <p class="text-[11px] text-center text-slate-400">Secured by Razorpay • 256-bit SSL Encryption</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SUPABASE CONFIG MODAL ==================== -->
+  <div id="supabase-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 tab-fade">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900">Supabase &amp; Razorpay Keys (Optional)</h3>
+        <button type="button" id="close-supabase-modal" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+      </div>
+      <p class="text-xs text-slate-600">ReviewPulse runs out-of-the-box in local demo mode. Add your live Supabase &amp; Razorpay keys below when deploying to production.</p>
+      <div class="space-y-3">
+        <div>
+          <label for="cfg-sb-url" class="block text-xs font-semibold text-slate-700 mb-1">Supabase Project URL</label>
+          <input id="cfg-sb-url" type="url" placeholder="https://xyzcompany.supabase.co" class="w-full min-h-[40px] rounded-xl border border-slate-300 px-3 text-xs" />
+        </div>
+        <div>
+          <label for="cfg-sb-key" class="block text-xs font-semibold text-slate-700 mb-1">Supabase Anon Key</label>
+          <input id="cfg-sb-key" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full min-h-[40px] rounded-xl border border-slate-300 px-3 text-xs" />
+        </div>
+        <div>
+          <label for="cfg-rzp-key" class="block text-xs font-semibold text-slate-700 mb-1">Razorpay Key ID</label>
+          <input id="cfg-rzp-key" type="text" placeholder="rzp_live_..." class="w-full min-h-[40px] rounded-xl border border-slate-300 px-3 text-xs" />
+        </div>
+      </div>
+      <button type="button" id="save-cfg-btn" class="w-full min-h-[42px] rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition">
+        Save Configuration
+      </button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'reviewpulse_state_v1';
+
+      const CATEGORY_ICONS = {
+        'Cafes/Restaurants': '☕',
+        'Medical Clinics/Pharmacies': '🏥',
+        'Petrol Bunks': '⛽',
+        'Coworking Spaces': '💻',
+        'Retail/Commercial Buildings': '🏢'
+      };
+
+      const CATEGORY_SEO = {
+        'Cafes/Restaurants': ['fresh food', 'filter coffee', 'dining spot'],
+        'Medical Clinics/Pharmacies': ['healthcare team', 'pharmacy counter', 'patient care'],
+        'Petrol Bunks': ['accurate fuel', 'quick service', 'clean restroom & air check'],
+        'Coworking Spaces': ['high-speed Wi-Fi', 'productive workspace', 'meeting rooms'],
+        'Retail/Commercial Buildings': ['parking convenience', 'clean premises', 'shopping experience']
+      };
+
+      const SAMPLE_REVIEWS = {
+        'Cafes/Restaurants': [
+          { stars: 5, text: 'Amazing filter coffee and crispy masala dosa! Staff was super quick even during Sunday morning rush.' },
+          { stars: 2, text: 'Wait time was 25 minutes for cold coffee and the table was not wiped properly.' }
+        ],
+        'Medical Clinics/Pharmacies': [
+          { stars: 5, text: 'Dr. Ramesh explained my diabetes and blood pressure prescription very patiently. Pharmacy had all tablets in stock.' },
+          { stars: 2, text: 'Had to wait 45 minutes for my skin allergy checkup and billing counter was slow.' }
+        ],
+        'Petrol Bunks': [
+          { stars: 5, text: 'Zero-check shown clearly before filling, UPI payment worked fast, and air pressure check was free.' },
+          { stars: 2, text: 'Attendant was rude when I asked for a printed bill and air pump was not working.' }
+        ],
+        'Coworking Spaces': [
+          { stars: 5, text: 'Super reliable 300 Mbps Wi-Fi, quiet phone booths, and great community vibe for remote teams.' },
+          { stars: 3, text: 'AC in the open desk area was too warm in the afternoon and conference room booking was full.' }
+        ],
+        'Retail/Commercial Buildings': [
+          { stars: 5, text: 'Well-maintained basement parking, clean lifts, and helpful security staff at the main entrance.' },
+          { stars: 2, text: 'Basement parking entry queue took 15 minutes and signage for the 3rd floor offices is confusing.' }
+        ]
+      };
+
+      const defaultState = {
+        user: null,
+        activeTab: 'setup',
+        billingCycle: 'monthly',
+        plan: 'free',
+        aiRepliesUsed: 2,
+        aiLimit: 10,
+        selectedAiStars: 5,
+        business: {
+          name: 'Kovai Filter Coffee & Kitchen',
+          category: 'Cafes/Restaurants',
+          city: 'RS Puram, Coimbatore',
+          gmapsLink: 'https://g.page/r/kovaifiltercoffee/review',
+          tone: 'Warm',
+          language: 'Tanglish',
+          autopostEnabled: true,
+          autodetectLang: true
+        },
+        postedReplies: [
+          {
+            id: 'post_1',
+            reviewer: 'Priya N.',
+            stars: 5,
+            detectedLang: 'Tamil',
+            reviewText: 'காலை காபி மற்றும் தோசை மிகவும் அருமையாக இருந்தது!',
+            replyText: 'Kovai Filter Coffee & Kitchen (RS Puram, Coimbatore) மீது நீங்கள் வைத்த நம்பிக்கைக்கு மிக்க நன்றி! எங்கள் fresh food மற்றும் சேவை உங்களுக்குப் பிடித்ததில் மகிழ்ச்சி. மீண்டும் வருக!',
+            postedAt: 'Today, 9:40 AM',
+            mode: 'Auto-Posted'
+          }
+        ],
+        feedbacks: [
+          {
+            id: 'fb_1',
+            stars: 2,
+            name: 'Aravindhan M.',
+            phone: '+91 98422 11234',
+            issue: 'Morning parcel order took 20 mins longer than promised.',
+            status: 'Pending',
+            createdAt: 'Today, 10:15 AM'
+          }
+        ],
+        config: { sbUrl: '', sbKey: '', rzpKey: '' },
+        paymentMeta: null
+      };
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return JSON.parse(JSON.stringify(defaultState));
+          const parsed = JSON.parse(raw);
+          return Object.assign({}, JSON.parse(JSON.stringify(defaultState)), parsed);
+        } catch (e) {
+          return JSON.parse(JSON.stringify(defaultState));
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {}
+      }
+
+      let state = loadState();
+      let authMode = 'signin';
+      let qrInstance = null;
+
+      // DOM helpers
+      const $ = (id) => document.getElementById(id);
+
+      function showToast(msg, isError) {
+        const toast = $('toast');
+        $('toast-msg').textContent = msg;
+        $('toast-icon').textContent = isError ? '!' : '✓';
+        $('toast-icon').className = isError ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
+        toast.classList.remove('hidden');
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(() => toast.classList.add('hidden'), 3000);
+      }
+
+      function renderAll() {
+        const isLoggedIn = Boolean(state.user);
+        $('public-page-view').classList.add('hidden');
+        $('auth-view').classList.toggle('hidden', isLoggedIn);
+        $('dashboard-view').classList.toggle('hidden', !isLoggedIn);
+        $('desktop-nav').classList.toggle('hidden', !isLoggedIn);
+        $('mobile-bottom-nav').classList.toggle('hidden', !isLoggedIn);
+        $('logout-btn').classList.toggle('hidden', !isLoggedIn);
+        $('header-plan-badge').classList.toggle('hidden', !isLoggedIn);
+
+        if (!isLoggedIn) return;
+
+        // Header plan badge
+        if (state.plan === 'pro') {
+          $('header-plan-badge').textContent = 'Pro Plan ★';
+          $('header-plan-badge').className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700';
+        } else {
+          $('header-plan-badge').textContent = 'Free Plan';
+          $('header-plan-badge').className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700';
+        }
+
+        // Banner
+        const b = state.business;
+        $('banner-category-icon').textContent = CATEGORY_ICONS[b.category] || '🏪';
+        $('banner-biz-name').textContent = b.name;
+        $('banner-biz-cat').textContent = b.category;
+        $('banner-biz-city').textContent = b.city;
+        $('banner-biz-tone').textContent = b.tone;
+        $('banner-biz-lang').textContent = b.language;
+        const usageText = state.plan === 'pro' ? `${state.aiRepliesUsed} (Unlimited)` : `${state.aiRepliesUsed} / ${state.aiLimit}`;
+        $('banner-usage-text').textContent = usageText;
+        $('ai-usage-pill').textContent = state.plan === 'pro' ? 'Unlimited AI Replies (Pro)' : `${state.aiRepliesUsed} / ${state.aiLimit} replies used this month`;
+
+        // Tab switching
+        document.querySelectorAll('.tab-panel').forEach((el) => el.classList.add('hidden'));
+        const activePanel = $('tab-' + state.activeTab);
+        if (activePanel) activePanel.classList.remove('hidden');
+
+        document.querySelectorAll('.nav-tab').forEach((btn) => {
+          const active = btn.dataset.tab === state.activeTab;
+          btn.className = active
+            ? 'nav-tab px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-50 text-indigo-700 transition'
+            : 'nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition';
+        });
+
+        document.querySelectorAll('.mobile-tab').forEach((btn) => {
+          const active = btn.dataset.tab === state.activeTab;
+          btn.className = active
+            ? 'mobile-tab flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-bold text-indigo-600 bg-indigo-50'
+            : 'mobile-tab flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[11px] font-medium text-slate-500';
+        });
+
+        // Setup form sync
+        $('setup-name').value = b.name;
+        $('setup-category').value = b.category;
+        $('setup-city').value = b.city;
+        $('setup-gmaps').value = b.gmapsLink;
+        $('setup-tone').value = b.tone;
+        $('setup-language').value = b.language;
+        $('setup-autopost').checked = b.autopostEnabled !== false;
+        $('setup-autodetect').checked = b.autodetectLang !== false;
+        $('autopilot-status-badge').textContent = (b.autopostEnabled !== false)
+          ? '● Auto-Post Active (' + (b.autodetectLang !== false ? 'Auto-Detect + ' + b.language : b.language) + ')'
+          : '○ Auto-Post Paused (Manual Approval)';
+
+        const isMedical = b.category === 'Medical Clinics/Pharmacies';
+        $('setup-medical-note').classList.toggle('hidden', !isMedical);
+        $('ai-medical-guard').classList.toggle('hidden', !isMedical);
+
+        // Sample review chips
+        const chipsBox = $('sample-review-chips');
+        chipsBox.innerHTML = '';
+        (SAMPLE_REVIEWS[b.category] || []).forEach((s) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700 transition';
+          btn.textContent = `${s.stars}★ Sample`;
+          btn.addEventListener('click', () => {
+            $('review-input').value = s.text;
+            setAiStars(s.stars);
+          });
+          chipsBox.appendChild(btn);
+        });
+
+        renderAiStars();
+        renderAutoPostLog();
+        renderQrPoster();
+        renderFeedbackInbox();
+        renderBilling();
+      }
+
+      function setAiStars(n) {
+        state.selectedAiStars = n;
+        saveState();
+        renderAiStars();
+      }
+
+      function renderAiStars() {
+        document.querySelectorAll('#ai-star-selector .star-btn').forEach((btn) => {
+          const s = Number(btn.dataset.star);
+          const active = s <= state.selectedAiStars;
+          btn.className = active
+            ? 'star-btn w-10 h-10 rounded-xl border border-amber-300 bg-amber-50 text-amber-500 flex items-center justify-center text-xl'
+            : 'star-btn w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-300 flex items-center justify-center text-xl';
+        });
+        $('ai-star-label').textContent = `${state.selectedAiStars} Star${state.selectedAiStars > 1 ? 's' : ''}`;
+      }
+
+      function renderQrPoster() {
+        const b = state.business;
+        $('poster-category').textContent = b.category;
+        $('poster-biz-name').textContent = b.name;
+        const qrBox = $('qr-code-box');
+        qrBox.innerHTML = '';
+        const funnelUrl = `${window.location.href.split('#')[0]}#rate=${encodeURIComponent(b.name)}`;
+        if (typeof QRCode !== 'undefined') {
+          qrInstance = new QRCode(qrBox, {
+            text: funnelUrl,
+            width: 156,
+            height: 156,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } else {
+          qrBox.innerHTML = '<div class="w-36 h-36 bg-slate-100 flex items-center justify-center text-xs text-slate-500">QR Ready</div>';
+        }
+      }
+
+      function renderFeedbackInbox() {
+        const list = $('private-feedback-list');
+        const pendingCount = state.feedbacks.filter((f) => f.status === 'Pending').length;
+        $('feedback-count-badge').textContent = `${pendingCount} Pending`;
+        if (state.feedbacks.length === 0) {
+          list.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">No private complaints yet. Great job!</div>';
+          return;
+        }
+        list.innerHTML = '';
+        state.feedbacks.forEach((fb) => {
+          const card = document.createElement('div');
+          card.className = 'rounded-xl border border-slate-200 p-3.5 bg-white space-y-2';
+          const isResolved = fb.status === 'Resolved';
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-xs font-bold">${fb.stars} ★</span>
+                <span class="font-bold text-sm text-slate-900">${escapeHtml(fb.name)}</span>
+              </div>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${isResolved ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${fb.status}</span>
+            </div>
+            <p class="text-xs text-slate-700">${escapeHtml(fb.issue)}</p>
+            <div class="flex items-center justify-between pt-1 text-[11px] text-slate-500">
+              <span>📞 ${escapeHtml(fb.phone)} • ${fb.createdAt}</span>
+              <button type="button" data-fb-id="${fb.id}" class="toggle-fb-btn font-semibold text-indigo-600 hover:underline">
+                ${isResolved ? 'Reopen' : 'Mark Resolved'}
+              </button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      }
+
+      function renderBilling() {
+        const isYearly = state.billingCycle === 'yearly';
+        $('cycle-monthly-btn').className = !isYearly
+          ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm transition'
+          : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 transition';
+        $('cycle-yearly-btn').className = isYearly
+          ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm transition'
+          : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 transition';
+
+        $('pro-price-display').textContent = isYearly ? '₹4,999' : '₹499';
+        $('pro-period-display').textContent = isYearly ? '/ year' : '/ month';
+        $('pro-subtext').textContent = isYearly ? 'Billed annually (₹416/mo effective)' : 'Or ₹4,999/year (2 months free)';
+        $('pay-btn-amount').textContent = isYearly ? '₹4,999' : '₹499';
+
+        const isPro = state.plan === 'pro';
+        $('free-current-tag').classList.toggle('hidden', isPro);
+        $('pro-current-tag').classList.toggle('hidden', !isPro);
+        $('razorpay-pay-btn').classList.toggle('hidden', isPro);
+        $('pro-receipt-card').classList.toggle('hidden', !isPro);
+        if (isPro && state.paymentMeta) {
+          $('pro-receipt-meta').textContent = `Payment ID: ${state.paymentMeta.id} • ${state.paymentMeta.amount} via ${state.paymentMeta.method}`;
+        }
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+      }
+
+      function detectReviewLanguage(text, fallbackLang) {
+        if (!text) return fallbackLang;
+        if (/[஀-௿]/.test(text)) return 'Tamil';
+        if (/[ऀ-ॿ]/.test(text)) return 'Hindi';
+        if (/[ഀ-ൿ]/.test(text)) return 'Malayalam';
+        if (/[ಀ-೿]/.test(text)) return 'Kannada';
+        if (/[ఀ-౿]/.test(text)) return 'Telugu';
+        const lower = text.toLowerCase();
+        if (/(romba|nalla|konjam|vaanga|irukku|super-ah|kadai|thanni|anna|akka)/.test(lower)) return 'Tanglish';
+        if (/(bahut|accha|bhaiya|dhanyawad|badiya|mast|dukaan)/.test(lower)) return 'Hindi';
+        return fallbackLang;
+      }
+
+      function renderAutoPostLog() {
+        const list = $('autopost-log-list');
+        if (!list) return;
+        const items = state.postedReplies || [];
+        $('autopost-count-badge').textContent = `${items.length} Posted`;
+        if (items.length === 0) {
+          list.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">No auto-posted replies yet. Click Simulate above to test!</div>';
+          return;
+        }
+        list.innerHTML = '';
+        items.forEach((item) => {
+          const card = document.createElement('div');
+          card.className = 'rounded-xl border border-slate-200 p-3.5 bg-slate-50/60 space-y-1.5';
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[11px] font-bold">${item.stars} ★</span>
+                <span class="font-bold text-xs text-slate-900">${escapeHtml(item.reviewer)}</span>
+                <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">${escapeHtml(item.detectedLang)}</span>
+              </div>
+              <span class="text-[11px] font-semibold text-emerald-700">✓ ${escapeHtml(item.mode)} • ${escapeHtml(item.postedAt)}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 italic">"${escapeHtml(item.reviewText)}"</p>
+            <p class="text-xs text-slate-800 bg-white rounded-lg p-2.5 border border-slate-200">${escapeHtml(item.replyText)}</p>
+          `;
+          list.appendChild(card);
+        });
+      }
+
+      // AI Reply Engine (Strictly respects Category, City SEO, Tone, Language & Medical Non-Disclosure)
+      function generateTailoredReplies(reviewText, stars, overrideLang) {
+        const b = state.business;
+        const seo = CATEGORY_SEO[b.category] || ['great service'];
+        const isPos = stars >= 4;
+        const isMedical = b.category === 'Medical Clinics/Pharmacies';
+        const lang = overrideLang || b.language;
+        const tone = b.tone;
+
+        // Medical privacy safe phrasing: NEVER echo conditions/symptoms
+        if (lang === 'Tamil') {
+          if (isPos) {
+            return [
+              `${b.name} (${b.city}) மீது நீங்கள் வைத்த நம்பிக்கைக்கு மிக்க நன்றி! எங்கள் ${seo[0]} மற்றும் சேவை உங்களுக்குப் பிடித்ததில் மகிழ்ச்சி. மீண்டும் வருக!`,
+              `உங்கள் ${stars}-நட்சத்திர மதிப்பீட்டிற்கு மனமார்ந்த நன்றி! ${b.city}-ல் சிறந்த ${seo[1]} வழங்க நாங்கள் எப்போதும் பாடுபடுகிறோம்.`,
+              `மிக்க நன்றி! ${b.name}-க்கு உங்கள் ஆதரவு எப்போதும் ஊக்கமளிக்கிறது. விரைவில் மீண்டும் சந்திப்போம்!`
+            ];
+          }
+          return [
+            `உங்கள் கருத்துக்கு நன்றி. ${b.name} (${b.city})-ல் ஏற்பட்ட சிரமத்திற்கு வருந்துகிறோம். உங்கள் அனுபவத்தை மேம்படுத்த எங்களைத் தொடர்பு கொள்ளவும்.`,
+            `உங்கள் ${stars}-நட்சத்திர கருத்தைப் பகிர்ந்ததற்கு நன்றி. ${b.city}-ல் எங்கள் ${seo[1]} தரத்தை உயர்த்த உடனடியாக நடவடிக்கை எடுக்கிறோம்.`,
+            `வருந்துகிறோம். ${b.name} நிர்வாகம் இதை நேரில் சரிசெய்ய விரும்புகிறது. தயவுசெய்து எங்களை அழைக்கவும்.`
+          ];
+        }
+
+        if (lang === 'Tanglish') {
+          if (isPos) {
+            return [
+              `Romba thanks for the ${stars}-star rating! ${b.city}-la ${b.name} oda ${seo[0]} ungaluku pidichathula romba happy. Next time-um kandippa vaanga!`,
+              `Thank you so much! ${b.name} (${b.city})-la eppovume best ${seo[1]} kudukanum-nu try panrom. Ungaloda support-ku big thanks!`,
+              `Super glad you loved our ${seo[2]} at ${b.name}, ${b.city}! Ungaloda kind words enga team-ku romba boost-ah irukku.`
+            ];
+          }
+          return [
+            `Sorry for the inconvenience! ${b.name} (${b.city})-la ungaluku smooth experience kidaikathathuku varuthapadrom. Direct-ah enga manager kitta pesunga, udane sort pannidalam.`,
+            `Ungaloda ${stars}-star feedback-ku thanks. ${b.city}-la enga ${seo[1]} improve panna ithai kandippa serious-ah eduthukurom.`,
+            `Apologies for the delay/issue at ${b.name}. Ungaluku better service thara oru chance kudunga, please reach out to our desk.`
+          ];
+        }
+
+        if (lang === 'Hindi') {
+          if (isPos) {
+            return [
+              `${b.name} (${b.city}) पर आपके ${stars}-स्टार रिव्यू के लिए बहुत-बहुत धन्यवाद! हमें खुशी है कि आपको हमारी ${seo[0]} पसंद आई। फिर से पधारें!`,
+              `आपके शानदार फीडबैक के लिए धन्यवाद! ${b.city} में बेहतरीन ${seo[1]} देने के लिए हमारी टीम हमेशा तत्पर है।`,
+              `दिल से धन्यवाद! ${b.name} में आपका हमेशा स्वागत है।`
+            ];
+          }
+          return [
+            `आपके फीडबैक के लिए धन्यवाद। ${b.name} (${b.city}) में हुई असुविधा के लिए हमें खेद है। कृपया हमारे मैनेजर से सीधे संपर्क करें।`,
+            `${stars}-स्टार अनुभव साझा करने के लिए धन्यवाद। हम ${b.city} में अपनी ${seo[1]} को और बेहतर बनाने पर तुरंत काम कर रहे हैं।`,
+            `असुविधा के लिए क्षमा चाहते हैं। ${b.name} की टीम आपकी समस्या को तुरंत हल करना चाहेगी।`
+          ];
+        }
+
+        if (lang === 'Malayalam') {
+          if (isPos) {
+            return [
+              `${b.name} (${b.city})-ൽ നിങ്ങൾ നൽകിയ ${stars}-സ്റ്റാർ റിവ്യൂവിന് വളരെ നന്ദി! ഞങ്ങളുടെ ${seo[0]} ഇഷ്ടപ്പെട്ടതിൽ സന്തോഷം. വീണ്ടും വരൂ!`,
+              `നിങ്ങളുടെ നല്ല വാക്കുകൾക്ക് നന്ദി! ${b.city}-ൽ മികച്ച ${seo[1]} നൽകാൻ ഞങ്ങൾ എപ്പോഴും ശ്രമിക്കുന്നു.`,
+              `വളരെ നന്ദി! ${b.name}-ലേക്ക് വീണ്ടും സ്വാഗതം.`
+            ];
+          }
+          return [
+            `നിങ്ങളുടെ അഭിപ്രായത്തിന് നന്ദി. ${b.name} (${b.city})-ൽ ഉണ്ടായ ബുദ്ധിമുട്ടിൽ ഖേദിക്കുന്നു. ദയവായി ഞങ്ങളുമായി നേരിട്ട് ബന്ധപ്പെടുക.`,
+            `ഫീഡ്‌ബാക്കിന് നന്ദി. ${b.city}-ൽ ഞങ്ങളുടെ ${seo[1]} മെച്ചപ്പെടുത്താൻ ഉടൻ നടപടിയെടുക്കും.`,
+            `ക്ഷമിക്കണം. നിങ്ങളുടെ പ്രശ്നം പരിഹരിക്കാൻ ${b.name} മാനേജ്മെന്റുമായി ബന്ധപ്പെടുക.`
+          ];
+        }
+
+        if (lang === 'Kannada') {
+          if (isPos) {
+            return [
+              `${b.name} (${b.city}) ಗೆ ನೀವು ನೀಡಿದ ${stars}-ಸ್ಟಾರ್ ವಿಮರ್ಶೆಗೆ ತುಂಬಾ ಧನ್ಯವಾದಗಳು! ನಮ್ಮ ${seo[0]} ನಿಮಗೆ ಇಷ್ಟವಾದದ್ದಕ್ಕೆ ಸಂತೋಷ. ಮತ್ತೆ ಬನ್ನಿ!`,
+              `ನಿಮ್ಮ ಪ್ರೋತ್ಸಾಹಕ್ಕೆ ಧನ್ಯವಾದಗಳು! ${b.city} ನಲ್ಲಿ ಉತ್ತಮ ${seo[1]} ನೀಡಲು ನಾವು ಸದಾ ಶ್ರಮಿಸುತ್ತೇವೆ.`,
+              `ತುಂಬಾ ಧನ್ಯವಾದಗಳು! ${b.name} ಗೆ ನಿಮ್ಮ ಭೇಟಿ ಸದಾ ಸ್ವಾಗತ.`
+            ];
+          }
+          return [
+            `ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಗೆ ಧನ್ಯವಾದಗಳು. ${b.name} (${b.city}) ನಲ್ಲಿ ಆದ ಅನಾನುಕೂಲಕ್ಕೆ ವಿಷಾದಿಸುತ್ತೇವೆ. ದಯವಿಟ್ಟು ನಮ್ಮನ್ನು ನೇರವಾಗಿ ಸಂಪರ್ಕಿಸಿ.`,
+            `ನಿಮ್ಮ ವಿಮರ್ಶೆಗೆ ಧನ್ಯವಾದಗಳು. ${b.city} ನಲ್ಲಿ ನಮ್ಮ ${seo[1]} ಗುಣಮಟ್ಟವನ್ನು ಸುಧಾರಿಸಲು ತಕ್ಷಣ ಕ್ರಮ ಕೈಗೊಳ್ಳುತ್ತೇವೆ.`,
+            `ಕ್ಷಮಿಸಿ. ದಯವಿಟ್ಟು ${b.name} ಮ್ಯಾನೇಜರ್ ಅವರನ್ನು ಸಂಪರ್ಕಿಸಿ, ನಾವು ತಕ್ಷಣ ಸರಿಪಡಿಸುತ್ತೇವೆ.`
+          ];
+        }
+
+        if (lang === 'Telugu') {
+          if (isPos) {
+            return [
+              `${b.name} (${b.city}) కు మీరు ఇచ్చిన ${stars}-స్టార్ రివ్యూకు చాలా ధన్యవాదాలు! మా ${seo[0]} మీకు నచ్చినందుకు సంతోషం. మళ్ళీ రండి!`,
+              `మీ మంచి మాటలకు ధన్యవాదాలు! ${b.city} లో ఉత్తమ ${seo[1]} అందించడానికి మేము ఎల్లప్పుడూ కృషి చేస్తాము.`,
+              `ధన్యవాదాలు! ${b.name} కు మీ మద్దతు ఎప్పుడూ మాకు బలం.`
+            ];
+          }
+          return [
+            `మీ ఫీడ్‌బ్యాక్‌కు ధన్యవాదాలు. ${b.name} (${b.city}) లో కలిగిన అసౌకర్యానికి చింతిస్తున్నాము. దయచేసి మమ్మల్ని నేరుగా సంప్రదించండి.`,
+            `మీ రివ్యూకు ధన్యవాదాలు. ${b.city} లో మా ${seo[1]} మెరుగుపరచడానికి వెంటనే చర్యలు తీసుకుంటాము.`,
+            `క్షమించండి. ${b.name} మేనేజ్‌మెంట్‌ను సంప్రదించండి, మేము వెంటనే పరిష్కరిస్తాము.`
+          ];
+        }
+
+        // English (with Tone & Medical Privacy variations)
+        if (isMedical) {
+          if (isPos) {
+            return [
+              `Thank you for your ${stars}-star review of ${b.name} in ${b.city}! Our team is committed to providing attentive ${seo[2]} and a smooth visit every time.`,
+              `We appreciate your kind feedback! At ${b.name} (${b.city}), we strive to maintain a welcoming, reliable ${seo[0]} experience for every visitor.`,
+              tone === 'Short & Crisp'
+                ? `Thanks for choosing ${b.name}, ${b.city}! Glad our ${seo[1]} met your expectations.`
+                : `Thank you for trusting ${b.name} in ${b.city}. Your encouragement means a great deal to our entire staff!`
+            ];
+          }
+          return [
+            `Thank you for sharing your feedback regarding your recent visit to ${b.name} in ${b.city}. We take service quality seriously and invite you to contact our clinic desk directly so we can assist you privately.`,
+            `We apologize that your experience at ${b.name} (${b.city}) fell short of expectations. Please reach out to our management team so we can address your concerns promptly.`,
+            `Thank you for bringing this to our attention. At ${b.name}, we are continuously working to improve wait times and ${seo[2]} in ${b.city}.`
+          ];
+        }
+
+        if (isPos) {
+          return [
+            `Thank you so much for the ${stars}-star review! We're thrilled you enjoyed our ${seo[0]} at ${b.name} in ${b.city}. Looking forward to welcoming you back soon!`,
+            `We truly appreciate your support! Providing top-notch ${seo[1]} in ${b.city} is what ${b.name} is all about. See you again soon!`,
+            tone === 'Short & Crisp'
+              ? `Thanks for the ${stars}★ rating! Always happy to serve you at ${b.name}, ${b.city}.`
+              : `Your kind words made our day at ${b.name}! Thank you for choosing us for ${seo[2]} in ${b.city}.`
+          ];
+        }
+        return [
+          `Thank you for your honest ${stars}-star feedback about ${b.name} in ${b.city}. We're sorry your visit wasn't seamless—please reach out to our manager so we can make this right.`,
+          `We appreciate you letting us know. At ${b.name} (${b.city}), we take ${seo[1]} seriously and are reviewing this with our team immediately.`,
+          `Apologies for falling short during your visit to ${b.name}. We'd love the chance to serve you better in ${b.city}—please connect with us directly.`
+        ];
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast('Reply copied to clipboard!')).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast('Reply copied to clipboard!');
+        } catch (e) {
+          showToast('Could not copy automatically', true);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Download QR Poster as PNG using offscreen Canvas
+      function downloadPosterPng() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 720;
+        canvas.height = 960;
+        const ctx = canvas.getContext('2d');
+
+        // Background gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, 960);
+        grad.addColorStop(0, '#4f46e5');
+        grad.addColorStop(1, '#312e81');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 720, 960);
+
+        // White inner card
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(40, 40, 640, 880, 32);
+        ctx.fill();
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#4338ca';
+        ctx.font = 'bold 24px Inter, sans-serif';
+        ctx.fillText(state.business.category.toUpperCase(), 360, 120);
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '800 38px Inter, sans-serif';
+        ctx.fillText(state.business.name.slice(0, 28), 360, 185);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '500 24px Inter, sans-serif';
+        ctx.fillText('Rate your experience in 10 seconds!', 360, 240);
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = '44px sans-serif';
+        ctx.fillText('★ ★ ★ ★ ★', 360, 310);
+
+        // Draw QR canvas/img inside poster
+        const qrImg = $('qr-code-box').querySelector('img');
+        const qrCanvas = $('qr-code-box').querySelector('canvas');
+        const source = qrCanvas || qrImg;
+        if (source) {
+          ctx.drawImage(source, 200, 360, 320, 320);
+        }
+
+        ctx.fillStyle = '#1e293b';
+        ctx.font = '600 22px Inter, sans-serif';
+        ctx.fillText('Scan with Phone Camera or Google Lens', 360, 745);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 18px Inter, sans-serif';
+        ctx.fillText('Powered by ReviewPulse • ' + state.business.city, 360, 860);
+
+        const link = document.createElement('a');
+        link.download = `${state.business.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-qr-poster.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('QR Poster PNG downloaded!');
+      }
+
+      // Public Legal & Pricing Pages
+      const PUBLIC_PAGES = {
+        pricing: `
+          <h1 class="text-2xl font-extrabold text-slate-900">Pricing Plans (INR)</h1>
+          <p>ReviewPulse offers transparent, affordable pricing for local commercial businesses across India.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="font-bold text-slate-900">Free Plan — ₹0 / month</div>
+              <p class="text-xs text-slate-600 mt-1">Includes 10 AI review replies per month, English/Tamil/Tanglish support, and a basic Smart QR review page.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/40">
+              <div class="font-bold text-slate-900">Pro Plan — ₹499 / month or ₹4,999 / year</div>
+              <p class="text-xs text-slate-600 mt-1">Unlimited AI review replies, Local SEO city optimization, printable counter QR standees, and Private Feedback Inbox.</p>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500">All prices are in Indian Rupees (INR). Payments are securely processed via Razorpay.</p>
+        `,
+        privacy: `
+          <h1 class="text-2xl font-extrabold text-slate-900">Privacy Policy</h1>
+          <p><strong>Effective Date:</strong> November 18, 2026</p>
+          <p>ReviewPulse ("we", "our") respects the privacy of Indian commercial businesses and their customers, in alignment with the Digital Personal Data Protection (DPDP) Act, 2023.</p>
+          <h2 class="font-bold text-slate-900 pt-2">1. Data We Collect</h2>
+          <p>We collect business profile details (Business Name, Category, City, Google Maps link), authentication details via Supabase Auth (Email/Google), and private customer feedback submitted via 1–3 star QR funnel forms (Name, Phone, Issue).</p>
+          <h2 class="font-bold text-slate-900 pt-2">2. Medical Clinic Confidentiality</h2>
+          <p>For Medical Clinics and Pharmacies, ReviewPulse enforces strict non-disclosure rules so AI-generated replies never repeat or reveal patient medical conditions or diagnoses.</p>
+          <h2 class="font-bold text-slate-900 pt-2">3. Contact</h2>
+          <p>For data deletion or privacy requests, email <strong>support@reviewpulse.in</strong>.</p>
+        `,
+        terms: `
+          <h1 class="text-2xl font-extrabold text-slate-900">Terms &amp; Conditions</h1>
+          <p>By accessing or using ReviewPulse, you agree to these Terms &amp; Conditions.</p>
+          <h2 class="font-bold text-slate-900 pt-2">1. Acceptable Use</h2>
+          <p>Businesses must only connect legitimate Google Maps review links and respond respectfully to customer reviews. ReviewPulse does not incentivize fake reviews or violate Google Maps policies.</p>
+          <h2 class="font-bold text-slate-900 pt-2">2. Subscriptions</h2>
+          <p>Pro subscriptions are billed monthly (₹499) or annually (₹4,999) through Razorpay. You may cancel renewal at any time from the Billing tab.</p>
+          <h2 class="font-bold text-slate-900 pt-2">3. Governing Law</h2>
+          <p>These terms are governed by the laws of India, with jurisdiction in Coimbatore, Tamil Nadu.</p>
+        `,
+        refund: `
+          <h1 class="text-2xl font-extrabold text-slate-900">Refund &amp; Cancellation Policy</h1>
+          <p>We want you to be completely satisfied with ReviewPulse Pro.</p>
+          <h2 class="font-bold text-slate-900 pt-2">1. 7-Day Refund Window</h2>
+          <p>If you experience any technical issue or are unsatisfied within <strong>7 days</strong> of your initial Pro Plan purchase (₹499/month or ₹4,999/year), email <strong>support@reviewpulse.in</strong> with your Razorpay Payment ID for a full refund.</p>
+          <h2 class="font-bold text-slate-900 pt-2">2. Processing Time</h2>
+          <p>Approved refunds are credited back to your original payment method (UPI, Card, or Netbanking) within 5–7 business days via Razorpay.</p>
+          <h2 class="font-bold text-slate-900 pt-2">3. Cancellations</h2>
+          <p>You can cancel future renewals anytime before your next billing date with zero cancellation fees.</p>
+        `
+      };
+
+      // ==================== EVENT LISTENERS ====================
+      $('auth-mode-signin').addEventListener('click', () => {
+        authMode = 'signin';
+        $('auth-mode-signin').className = 'flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition';
+        $('auth-mode-signup').className = 'flex-1 py-2 text-sm font-semibold rounded-lg text-slate-600 transition';
+        $('auth-submit-btn').textContent = 'Sign In with Email';
+      });
+
+      $('auth-mode-signup').addEventListener('click', () => {
+        authMode = 'signup';
+        $('auth-mode-signup').className = 'flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition';
+        $('auth-mode-signin').className = 'flex-1 py-2 text-sm font-semibold rounded-lg text-slate-600 transition';
+        $('auth-submit-btn').textContent = 'Create Account with Email';
+      });
+
+      $('auth-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = $('auth-email').value.trim();
+        state.user = { email, provider: 'email' };
+        saveState();
+        showToast(authMode === 'signup' ? 'Account created via Supabase Auth!' : 'Signed in successfully!');
+        renderAll();
+      });
+
+      $('google-auth-btn').addEventListener('click', () => {
+        state.user = { email: 'owner@kovaicafe.in', provider: 'google' };
+        saveState();
+        showToast('Signed in with Google (Supabase OAuth)!');
+        renderAll();
+      });
+
+      $('demo-login-btn').addEventListener('click', () => {
+        state.user = { email: 'demo@reviewpulse.in', provider: 'demo' };
+        saveState();
+        showToast('Loaded RS Puram Cafe demo workspace!');
+        renderAll();
+      });
+
+      $('logout-btn').addEventListener('click', () => {
+        state.user = null;
+        saveState();
+        showToast('Signed out');
+        renderAll();
+      });
+
+      // Tabs
+      document.querySelectorAll('.nav-tab, .mobile-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.activeTab = btn.dataset.tab;
+          saveState();
+          renderAll();
+        });
+      });
+
+      // Business Setup Save
+      $('setup-category').addEventListener('change', () => {
+        const isMed = $('setup-category').value === 'Medical Clinics/Pharmacies';
+        $('setup-medical-note').classList.toggle('hidden', !isMed);
+      });
+
+      $('business-setup-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.business = {
+          name: $('setup-name').value.trim(),
+          category: $('setup-category').value,
+          city: $('setup-city').value.trim(),
+          gmapsLink: $('setup-gmaps').value.trim(),
+          tone: $('setup-tone').value,
+          language: $('setup-language').value,
+          autopostEnabled: $('setup-autopost').checked,
+          autodetectLang: $('setup-autodetect').checked
+        };
+        saveState();
+        showToast('Business profile saved to Supabase!');
+        renderAll();
+      });
+
+      // AI Star Selector
+      document.querySelectorAll('#ai-star-selector .star-btn').forEach((btn) => {
+        btn.addEventListener('click', () => setAiStars(Number(btn.dataset.star)));
+      });
+
+      // Generate 3 Replies
+      $('generate-replies-btn').addEventListener('click', () => {
+        const txt = $('review-input').value.trim();
+        if (!txt) {
+          showToast('Please paste a customer review first.', true);
+          return;
+        }
+        if (state.plan === 'free' && state.aiRepliesUsed >= state.aiLimit) {
+          showToast('Free monthly limit (10/10) reached. Upgrade to Pro!', true);
+          state.activeTab = 'billing';
+          saveState();
+          renderAll();
+          return;
+        }
+        const targetLang = state.business.autodetectLang
+          ? detectReviewLanguage(txt, state.business.language)
+          : state.business.language;
+        const replies = generateTailoredReplies(txt, state.selectedAiStars, targetLang);
+        state.aiRepliesUsed += 1;
+        saveState();
+        renderAll();
+
+        $('replies-output').classList.remove('hidden');
+        $('replies-meta-tag').textContent = `${targetLang} • ${state.business.tone}`;
+        const list = $('replies-list');
+        list.innerHTML = '';
+        replies.forEach((reply, idx) => {
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-3';
+          card.innerHTML = `
+            <div class="space-y-1 flex-1">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600">Option ${idx + 1} (${escapeHtml(targetLang)})</div>
+              <p class="text-sm text-slate-800 leading-relaxed">${escapeHtml(reply)}</p>
+            </div>
+            <div class="flex sm:flex-col gap-2 shrink-0">
+              <button type="button" class="post-reply-btn min-h-[38px] px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition">
+                Post to Google
+              </button>
+              <button type="button" class="copy-reply-btn min-h-[38px] px-3.5 rounded-xl bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-800 font-semibold text-xs transition">
+                Copy Reply
+              </button>
+            </div>
+          `;
+          card.querySelector('.copy-reply-btn').addEventListener('click', () => copyText(reply));
+          card.querySelector('.post-reply-btn').addEventListener('click', (ev) => {
+            state.postedReplies = state.postedReplies || [];
+            state.postedReplies.unshift({
+              id: 'post_' + Date.now(),
+              reviewer: 'Google Customer',
+              stars: state.selectedAiStars,
+              detectedLang: targetLang,
+              reviewText: txt.slice(0, 140),
+              replyText: reply,
+              postedAt: 'Just now',
+              mode: 'Posted'
+            });
+            saveState();
+            renderAutoPostLog();
+            ev.currentTarget.textContent = 'Posted ✓';
+            ev.currentTarget.disabled = true;
+            ev.currentTarget.className = 'post-reply-btn min-h-[38px] px-3.5 rounded-xl bg-emerald-100 text-emerald-800 font-semibold text-xs';
+            showToast(`Reply posted to Google in ${targetLang}!`);
+          });
+          list.appendChild(card);
+        });
+      });
+
+      // Simulate Incoming Google Review & Auto-Post in Local Language
+      const INCOMING_SAMPLES = [
+        { reviewer: 'Senthil K.', stars: 5, text: 'காலை காபி மற்றும் சர்வீஸ் மிகவும் அருமை!' },
+        { reviewer: 'Vikram R.', stars: 5, text: 'Romba nalla irukku! Fast service and clean place.' },
+        { reviewer: 'Ananya S.', stars: 5, text: 'बहुत बढ़िया सर्विस और साफ-सफाई।' },
+        { reviewer: 'Meera V.', stars: 4, text: 'வெயிட் டைம் கொஞ்சம் அதிகம், ஆனால் ஸ்டாஃப் மிகவும் நல்லவர்கள்.' }
+      ];
+      let simIdx = 0;
+      $('simulate-autopost-btn').addEventListener('click', () => {
+        if (state.plan === 'free' && state.aiRepliesUsed >= state.aiLimit) {
+          showToast('Free monthly limit (10/10) reached. Upgrade to Pro!', true);
+          state.activeTab = 'billing';
+          saveState();
+          renderAll();
+          return;
+        }
+        const sample = INCOMING_SAMPLES[simIdx % INCOMING_SAMPLES.length];
+        simIdx += 1;
+        const lang = state.business.autodetectLang !== false
+          ? detectReviewLanguage(sample.text, state.business.language)
+          : state.business.language;
+        const replies = generateTailoredReplies(sample.text, sample.stars, lang);
+        const chosen = replies[0];
+        state.aiRepliesUsed += 1;
+        state.postedReplies = state.postedReplies || [];
+        state.postedReplies.unshift({
+          id: 'post_' + Date.now(),
+          reviewer: sample.reviewer,
+          stars: sample.stars,
+          detectedLang: lang,
+          reviewText: sample.text,
+          replyText: chosen,
+          postedAt: 'Just now',
+          mode: state.business.autopostEnabled !== false ? 'Auto-Posted' : 'Queued'
+        });
+        saveState();
+        renderAll();
+        showToast(
+          state.business.autopostEnabled !== false
+            ? `Auto-posted reply to ${sample.reviewer} in ${lang}!`
+            : `Draft queued for ${sample.reviewer} in ${lang}`
+        );
+      });
+
+      // QR Poster Actions
+      $('download-poster-btn').addEventListener('click', downloadPosterPng);
+      $('print-poster-btn').addEventListener('click', () => window.print());
+
+      // Customer QR Funnel Simulation
+      function openFunnelModal() {
+        $('funnel-biz-badge').textContent = state.business.category;
+        $('funnel-biz-name').textContent = state.business.name;
+        $('funnel-gmaps-link').href = state.business.gmapsLink || 'https://maps.google.com';
+        $('funnel-step-rate').classList.remove('hidden');
+        $('funnel-step-google').classList.add('hidden');
+        $('funnel-step-private').classList.add('hidden');
+        $('funnel-step-thanks').classList.add('hidden');
+        $('funnel-modal').classList.remove('hidden');
+      }
+
+      $('launch-funnel-btn').addEventListener('click', openFunnelModal);
+      $('quick-funnel-preview-btn').addEventListener('click', openFunnelModal);
+      $('close-funnel-modal').addEventListener('click', () => $('funnel-modal').classList.add('hidden'));
+      $('funnel-reset-btn-a').addEventListener('click', openFunnelModal);
+      $('funnel-reset-btn-b').addEventListener('click', () => $('funnel-modal').classList.add('hidden'));
+
+      let currentFunnelRating = 5;
+      document.querySelectorAll('.funnel-star').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          currentFunnelRating = Number(btn.dataset.fstar);
+          $('funnel-step-rate').classList.add('hidden');
+          if (currentFunnelRating >= 4) {
+            $('funnel-selected-stars').textContent = String(currentFunnelRating);
+            $('funnel-step-google').classList.remove('hidden');
+          } else {
+            $('funnel-step-private').classList.remove('hidden');
+          }
+        });
+      });
+
+      $('private-feedback-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.feedbacks.unshift({
+          id: 'fb_' + Date.now(),
+          stars: currentFunnelRating,
+          name: $('fb-name').value.trim(),
+          phone: $('fb-phone').value.trim(),
+          issue: $('fb-issue').value.trim(),
+          status: 'Pending',
+          createdAt: 'Just now'
+        });
+        $('private-feedback-form').reset();
+        saveState();
+        renderFeedbackInbox();
+        $('funnel-step-private').classList.add('hidden');
+        $('funnel-step-thanks').classList.remove('hidden');
+        showToast('Private feedback saved to Inbox!');
+      });
+
+      $('private-feedback-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.toggle-fb-btn');
+        if (!btn) return;
+        const id = btn.dataset.fbId;
+        const item = state.feedbacks.find((f) => f.id === id);
+        if (item) {
+          item.status = item.status === 'Pending' ? 'Resolved' : 'Pending';
+          saveState();
+          renderFeedbackInbox();
+        }
+      });
+
+      // Billing & Razorpay
+      $('cycle-monthly-btn').addEventListener('click', () => {
+        state.billingCycle = 'monthly';
+        saveState();
+        renderBilling();
+      });
+      $('cycle-yearly-btn').addEventListener('click', () => {
+        state.billingCycle = 'yearly';
+        saveState();
+        renderBilling();
+      });
+
+      $('razorpay-pay-btn').addEventListener('click', () => {
+        $('rzp-modal-amount').textContent = state.billingCycle === 'yearly' ? '₹4,999 / year' : '₹499 / month';
+        $('razorpay-modal').classList.remove('hidden');
+      });
+
+      $('close-rzp-modal').addEventListener('click', () => $('razorpay-modal').classList.add('hidden'));
+
+      $('confirm-rzp-pay-btn').addEventListener('click', () => {
+        const methodEl = document.querySelector('input[name="rzp-method"]:checked');
+        const method = methodEl ? methodEl.value : 'UPI';
+        state.plan = 'pro';
+        state.paymentMeta = {
+          id: 'pay_RZP' + Math.floor(100000 + Math.random() * 900000),
+          amount: state.billingCycle === 'yearly' ? '₹4,999/yr' : '₹499/mo',
+          method
+        };
+        saveState();
+        $('razorpay-modal').classList.add('hidden');
+        showToast('Upgraded to ReviewPulse Pro via Razorpay!');
+        renderAll();
+      });
+
+      // Supabase Config Modal
+      $('open-supabase-modal-btn').addEventListener('click', () => {
+        $('cfg-sb-url').value = state.config.sbUrl || '';
+        $('cfg-sb-key').value = state.config.sbKey || '';
+        $('cfg-rzp-key').value = state.config.rzpKey || '';
+        $('supabase-modal').classList.remove('hidden');
+      });
+      $('close-supabase-modal').addEventListener('click', () => $('supabase-modal').classList.add('hidden'));
+      $('save-cfg-btn').addEventListener('click', () => {
+        state.config = {
+          sbUrl: $('cfg-sb-url').value.trim(),
+          sbKey: $('cfg-sb-key').value.trim(),
+          rzpKey: $('cfg-rzp-key').value.trim()
+        };
+        saveState();
+        $('supabase-modal').classList.add('hidden');
+        showToast('Environment keys saved locally!');
+      });
+
+      // Public Footer Pages
+      document.querySelectorAll('[data-public]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const page = btn.dataset.public;
+          $('auth-view').classList.add('hidden');
+          $('dashboard-view').classList.add('hidden');
+          $('public-page-content').innerHTML = PUBLIC_PAGES[page] || '';
+          $('public-page-view').classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      $('back-from-public-btn').addEventListener('click', () => renderAll());
+      $('brand-home-btn').addEventListener('click', () => renderAll());
+
+      // Initialize
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
